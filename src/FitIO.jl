@@ -27,5 +27,8 @@ export decode_definition_message!, DefinitionMessage
 include("decoder/data_message.jl")
 export decode_data_message!, DataMessage
 
+include("iterator.jl")
+export FitFile
+
 
 end # module FitIO
