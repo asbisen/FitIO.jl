@@ -48,11 +48,19 @@ function read_developer_field_value!(stream::FitStream, f::DeveloperFieldDefinit
 end
 
 
+"""
+    decode_data_message!(stream::FitStream, definition::DefinitionMessage)::DataMessage
+
+Decode a data message from the given `FitStream` using the provided `DefinitionMessage`. 
+
+Returns: A `DataMessage` containing the raw values read from the stream and the associated definition.
+"""
 function decode_data_message!(stream::FitStream, definition::DefinitionMessage)::DataMessage
 
     endianness = definition.header.endianness
 
     # Read raw values from the stream based on the definition
+    # create a vector to hold the raw values (first for field_definitions, then for developer_field_defs)
     raw_values = Vector{Any}(undef, length(definition.field_definitions) + length(definition.developer_field_defs))
 
     header_byte = read_byte!(stream)

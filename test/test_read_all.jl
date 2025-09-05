@@ -1,6 +1,6 @@
 using Test
 using FitIO
-using FitIO: read_file_header, position, peek_byte, message_type, DefinitionMsg, RegularMsg
+using FitIO: read_file_header, position, peek_byte, message_type, DefinitionMsg, RegularMsg, LOCAL_MESG_NUM_MASK
 
 include("test_utils.jl")
 
@@ -10,6 +10,8 @@ function read_all_messages(f::AbstractString; verbose::Bool=false)
     stream = FitStream(f)
     header = read_file_header(stream; seek_back=false)
     messages = []
+
+    local definition_messages = Dict{UInt8, FitIO.DefinitionMessage}()
 
     local def_msg
     while position(stream) < header.data_size + header.header_size
@@ -21,7 +23,11 @@ function read_all_messages(f::AbstractString; verbose::Bool=false)
     
         if record_type == DefinitionMsg
             def_msg = decode_definition_message!(stream)
+            definition_messages[def_msg.header.local_mesg_num] = def_msg
+
         elseif record_type == RegularMsg
+            local_msg_number = header_byte & FitIO.LOCAL_MESG_NUM_MASK # Get the local message number
+            def_msg = get(definition_messages, local_msg_number, nothing)
             if def_msg === nothing
                 error("Data message encountered before definition message at position $(position(stream))")
             end
@@ -38,17 +44,8 @@ end
 @testset "Read Files" begin
     fit_files = get_sdk_fit_files()
 
-    # TODO: Test failing here for file 3 & 6
-    # Multiple local messages with different local numbers not 
-    # handled correctly yet. message definitions are being overwritten as 
-    # they are encountered.
-    for (i, f) in enumerate(fit_files)
-        if (i == 3) || (i == 6) # These files have known issues
-            println("Known issue with file $f, expecting zero messages")
-            continue
-        else
-            messages = read_all_messages(f; verbose=false)
-            @test length(messages) > 0
-        end
+    for f in fit_files
+        messages = read_all_messages(f; verbose=false)
+        @test length(messages) > 0
     end
 end
