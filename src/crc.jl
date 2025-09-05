@@ -70,3 +70,23 @@ function _extract_file_crc(data::Vector{UInt8})::UInt16
 end
 
 _extract_file_crc(filename::String)::UInt16 = read(filename) |> _extract_file_crc
+
+
+"""
+    _validate_file_crc(data::Vector{UInt8})::Bool
+    _validate_file_crc(filename::String)::Bool
+
+Validate the CRC of FIT file data or file by comparing computed CRC with the stored CRC.
+"""
+function _validate_crc(data::Vector{UInt8})::Bool
+    if length(data) < CRCSIZE
+        throw(FitDecoderError("Data too short to contain CRC"))
+    end
+
+    computed_crc = _calculate_crc(data, 1, length(data) - CRCSIZE)
+    file_crc = _extract_file_crc(data)
+
+    return computed_crc == file_crc
+end
+
+_validate_crc(filename::String)::Bool = read(filename) |> _validate_crc

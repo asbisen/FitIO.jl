@@ -34,3 +34,12 @@ Thumbs.db
 /build/
 deps/
 docs/build/
+
+# Generated Global Fit Profile JSON files
+contrib/fit_data_export/ 
+
+# Fit SDK Python code
+contrib/fit-python-sdk/ 
+
+# Sample Code Notebooks
+notebooks/
