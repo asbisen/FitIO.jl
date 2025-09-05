@@ -22,10 +22,10 @@ include("decoder/header.jl")
 export FitHeader
 
 include("decoder/definition_message.jl")
-export decode_definition_message!
+export decode_definition_message!, DefinitionMessage
 
 include("decoder/data_message.jl")
-export decode_data_message!
+export decode_data_message!, DataMessage
 
 
 end # module FitIO
