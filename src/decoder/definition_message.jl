@@ -45,6 +45,7 @@ struct FieldDefinition
     base_type::UInt8
     num_field_elements::Int
     local_mesg_num::UInt8
+    global_mesg_num::UInt16
 end
 
 
@@ -131,7 +132,9 @@ function read_field_definitions!(stream::FitStream, header::DefinitionHeader)
         num_field_elements = trunc(Int, field_size / def_size)
 
         local_mesg_num = header.local_mesg_num
-        field_defs[x] = FieldDefinition(field_id, field_size, base_type, num_field_elements, local_mesg_num)
+        global_mesg_num = header.global_mesg_num
+        field_defs[x] = FieldDefinition(field_id, field_size, base_type, 
+                                    num_field_elements, local_mesg_num, global_mesg_num)
     end
     return field_defs
 end
