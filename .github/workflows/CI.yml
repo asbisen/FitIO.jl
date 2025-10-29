@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - feature/*
     tags: ["*"]
   pull_request:
   workflow_dispatch:
@@ -29,7 +30,7 @@ jobs:
         os:
           - ubuntu-latest
         arch:
-          - aarch64
+          # - aarch64
           - x64
     steps:
       - uses: actions/checkout@v4

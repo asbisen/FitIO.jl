@@ -19,7 +19,28 @@ The library currently supports:
 
 ## Example 
 
+* reading raw messages without decoding
+
 ```julia
 fit = FitFile("sample_fit_file.fit")
 messages = [m for m in fit]
 ```
+
+* reading and decoding messages
+
+```julia
+julia> decoded_data = decode_fit_file("Activity.fit")
+julia> records = FitDecoder.get_records(decoded_data, "record")
+julia> records[10]
+record (9/9 valid fields) @ 2021-07-20T21:11:29
+  1118.0 Any["m"] [✓]
+  9.0 m [✓]
+  1.0 Any["m/s"] [✓]
+  965 semicircles [✓]
+  9 rpm [✓]
+  0 semicircles [✓]
+  150 watts [✓]
+  995749889 s [✓]
+  195 bpm [✓]
+```
+
