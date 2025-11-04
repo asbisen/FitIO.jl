@@ -611,6 +611,22 @@ end
 # =============================================================================
 
 """
+    convert_garmin_datetime(raw_value::Union{Number, Nothing}) -> Union{DateTime, Nothing}
+
+Convert Garmin FIT timestamp (seconds since FIT epoch) to Julia DateTime.
+"""
+function convert_garmin_datetime(raw_value::Union{Number, Nothing})
+    # Handle nothing/invalid values
+    if raw_value === nothing
+        return nothing
+    end
+
+    fit_epoch = Dates.unix2datetime(FitIO.FIT_EPOCH_OFFSET)
+    return fit_epoch + Second(raw_value)
+end
+
+
+"""
     get_records(decoded_data::DecodedFitData, message_type::String) -> Vector{DecodedMessage}
 """
 function get_records(decoded_data::DecodedFitData, message_type::String)
