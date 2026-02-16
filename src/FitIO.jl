@@ -32,9 +32,5 @@ export decode_data_message!, DataMessage
 include("iterator.jl")
 export FitFile
 
-include("api/api.jl")
-export DecodedField, DecodedMessage, DecodedFitData, decode_fit_file, get_records, filter_valid_fields
-export convert_garmin_datetime
-
 
 end # module FitIO
