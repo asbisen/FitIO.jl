@@ -1,8 +1,10 @@
 module FitIO
 
-using JSON
 using Printf
 using Dates
+
+import EasyConfig: Config
+using MsgPack
 
 include("const.jl")
 include("profile.jl")

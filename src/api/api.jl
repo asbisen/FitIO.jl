@@ -435,7 +435,11 @@ function decode_message(data_message::DataMessage, profile::FitProfile = PROFILE
     global_mesg_num_str = string(global_mesg_num)
     
     # Get message info from profile
-    message_name = get(profile.message_num_to_name, global_mesg_num, "unknown_$global_mesg_num")
+    message_name =if haskey(profile.messages, global_mesg_num)
+        profile.messages[global_mesg_num].name
+    else
+        "unknown_$global_mesg_num"
+    end
     
     decoded_fields = Dict{String, DecodedField}()
     timestamp = nothing

@@ -1,15 +1,18 @@
 name = "FitIO"
 uuid = "3ead0a55-6966-403a-a7e1-c8c6f23f159c"
-authors = ["Anand Bisen <asbisen@icloud.com>"]
 version = "0.1.0"
+authors = ["Anand Bisen <asbisen@icloud.com>"]
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+EasyConfig = "acab07b0-f158-46d4-8913-50acef6d41fe"
+MsgPack = "99f44e22-a591-53d1-9472-aa23ef4bd671"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 Dates = "1.11.0"
+EasyConfig = "0.1.16"
+MsgPack = "1.2.1"
 Printf = "1.11.0"
 Test = "1.11.0"
