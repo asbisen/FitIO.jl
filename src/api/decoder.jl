@@ -200,6 +200,14 @@ function _apply_scale_offset(msg::FitIO.DataMessage, def::FitIO.FieldDefinition,
   !_is_numeric_value(val) && return val
 
   scale_val = _extract_scale_value(effective_field_profile[:scale])
+
+  # - Scale value should not be 0
+  if scale_val == 0
+    errmsg = "Invalid scale value 0 for field $(def.field_id); cannot divide by zero"
+    throw(FitDecoderError(errmsg))
+  end
+
+  # - If it is 1 do nothing
   scale_val == 1 && return val
   
   return _apply_scale(val, scale_val)
@@ -333,15 +341,6 @@ function to_dataframe(messages::Vector{DecodedMessage}; include_units::Bool=true
         temp_data[field] = []
     end
     
-    # for msg in messages
-    #     for field in all_fields
-    #         if haskey(msg, field)
-    #             push!(temp_data[field], flatten(msg[field]; include_units=include_units))
-    #         else
-    #             push!(temp_data[field], missing)
-    #         end
-    #     end
-    # end
     for msg in messages, field in all_fields
       value = haskey(msg, field) ? 
         flatten(msg[field]; include_units=include_units) : 
@@ -352,25 +351,6 @@ function to_dataframe(messages::Vector{DecodedMessage}; include_units::Bool=true
     # Create and return DataFrame (DataFrame will infer types automatically)
     return DataFrame(temp_data)
 end
-
-
-
-"""
-  Load global profile for message decoding from a msgpack file. This file is generated from
-  the python SDK. 
-
-Returns: A `Config` object containing the global profile for message decoding.
-
-FIXME: consider using FitProfile from the global `PROFILE` constant instead.
-"""
-# function load_global_profile(msgfile::AbstractString=PROFILE_PATH)::Config
-#     return open(msgfile) do io
-#         data = MsgPack.unpack(io)
-#         Config(data)
-#     end
-# end
-
-
 
 
 """
@@ -403,39 +383,12 @@ end
 
 
 """
-  Return true if the field definition is of numeric type. Checks the global profile
-  to determine the base type of the field and whether it is numeric.
-"""
-# function _is_numeric_field(def::FitIO.FieldDefinition; profile::Union{Nothing, Config}=nothing)::Bool
-#   profile = isnothing(profile) ? load_global_profile() : profile
-
-#   # if the field is not defined in the profile, we cannot determine if it is numeric or not, so we return false
-#   !_isinprofile(def; profile=profile) && return false
-
-#   _global_mesg_num = def.global_mesg_num
-#   _field_id = def.field_id
-
-#   # extract the field profile from the global profile
-#   field_profile = profile[:messages][_global_mesg_num][:fields][_field_id]
-#   _base_type = field_profile[:type] |> Symbol
-
-#   if haskey(FitIO.BASE_TYPE_NAME, _base_type) &&
-#        FitIO.BASE_TYPE_NAME[_base_type].numeric
-#       return true
-#   end
-#   return false
-# end
-
-
-"""
   Promote values to higher-precision types for numeric values, pass through others.
   This is used to ensure that numeric values are decoded with sufficient precision, especially
   when the raw value is stored in a smaller type (e.g., UInt16) but the decoded value is expected
   to be a larger type (e.g., Int or Float64).
 """
-
-# Default: return as-is for non-promotable types
-_promote(val) = val
+_promote(val) = val # Default: return as-is for non-promotable types
 
 # Override: promote numeric types
 _promote(val::Integer) = Int(val)

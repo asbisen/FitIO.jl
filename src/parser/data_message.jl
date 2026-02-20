@@ -41,9 +41,11 @@ function read_field_value!(stream::FitStream, f::FieldDefinition; endianness=LIT
         result = [
             _read_single_numeric_field!(stream, data_type; endianness=endianness) for _ in 1:num_elements
         ]
+        return result
 
     elseif data_type == String
         result = read_string!(stream, f.num_field_elements)
+        return result
     
     else 
         errmsg = "Unsupported data type $(data_type) for field $(f.field_id)"
