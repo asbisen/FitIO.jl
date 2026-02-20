@@ -19,15 +19,14 @@ Iterate over the field definitions in the message and decode each field
     - process invalid values by replacing them with `nothing` using the base type definition
     - promote numeric values to a higher precision type (e.g., Int or Float64) to ensure sufficient precision
 """ 
-function decode(cfg::DecoderConfig, msg::FitIO.DataMessage; profile=nothing)
-  profile = isnothing(profile) ? load_global_profile() : profile
+function decode(cfg::DecoderConfig, msg::FitIO.DataMessage; profile=PROFILE)
   _global_mesg_num = msg.definition.header.global_mesg_num
 
   # if message is defined in global profile use the name from the profile,
   # otherwise use "unknown_msg_[global_mesg_num]"
-  _message_in_profile = _isinprofile(msg; profile=profile)
+  _message_in_profile = _isinprofile(msg)
   _message_name = _message_in_profile ? 
-    profile[:messages][_global_mesg_num].name : 
+    profile.messages[_global_mesg_num].name : 
     "unknown_msg_$_global_mesg_num"
 
   # Initialize a dictionary to store the decoded fields
@@ -35,9 +34,9 @@ function decode(cfg::DecoderConfig, msg::FitIO.DataMessage; profile=nothing)
 
   # iterate over the field definitions in the message and decode each field
   for (idx, field) in enumerate(msg.definition.field_definitions)
-    _field_in_profile = _isinprofile(field; profile=profile)
+    _field_in_profile = _isinprofile(field)
     field_profile = _field_in_profile ? 
-            profile[:messages][_global_mesg_num][:fields][field.field_id] : 
+            profile.messages[_global_mesg_num].fields[field.field_id] : 
             nothing
 
     # Check for sub-field mapping
@@ -142,13 +141,12 @@ _replace_invalid(val::Vector, invalid_val) = [_replace_invalid(v, invalid_val) f
   mapping in the profile. Returns the decoded enum value if found, otherwise 
   returns the raw value unchanged.
 """
-function _decode_enum(msg::FitIO.DataMessage, def::FitIO.FieldDefinition, raw_val; profile=nothing)
-  profile = isnothing(profile) ? load_global_profile() : profile
+function _decode_enum(msg::FitIO.DataMessage, def::FitIO.FieldDefinition, raw_val; profile=PROFILE)
   _field_in_profile = _isinprofile(def; profile=profile)
   _global_mesg_num = msg.definition.header.global_mesg_num
 
   field_profile = _field_in_profile ? 
-    profile[:messages][_global_mesg_num][:fields][def.field_id] : 
+    profile.messages[_global_mesg_num].fields[def.field_id] : 
     nothing
 
   # Check for sub-field mapping
@@ -164,10 +162,10 @@ function _decode_enum(msg::FitIO.DataMessage, def::FitIO.FieldDefinition, raw_va
   field_type_sym = Symbol(effective_field_profile[:type])
 
   # Check if this field type has an enum mapping in the profile
-  haskey(profile[:types], field_type_sym) || return raw_val
+  haskey(profile.types, field_type_sym) || return raw_val
   
   # Look up the raw value in the enum mapping
-  type_profile = profile[:types][field_type_sym]
+  type_profile = profile.types[field_type_sym]
   return get(type_profile, raw_val, raw_val)
 end
 
@@ -181,13 +179,12 @@ end
   - Field is not numeric
   - Scale factor is 1
 """
-function _apply_scale_offset(msg::FitIO.DataMessage, def::FitIO.FieldDefinition, val; profile=nothing)
-  profile = isnothing(profile) ? load_global_profile() : profile
+function _apply_scale_offset(msg::FitIO.DataMessage, def::FitIO.FieldDefinition, val; profile=PROFILE)
   _field_in_profile = _isinprofile(def; profile=profile)
   _global_mesg_num = msg.definition.header.global_mesg_num
 
   field_profile = _field_in_profile ? 
-    profile[:messages][_global_mesg_num][:fields][def.field_id] : 
+    profile.messages[_global_mesg_num][:fields][def.field_id] : 
     nothing
 
   # Check for sub-field mapping
@@ -226,17 +223,14 @@ _is_numeric_value(::Any) = false
 
 
 
-
 """
   Resolve sub-field based on mapping conditions. Returns the appropriate sub-field
   configuration if mapping conditions match, otherwise returns nothing.
 """
-function _resolve_subfield(def::FitIO.FieldDefinition, msg::FitIO.DataMessage; profile=nothing)
-  profile = isnothing(profile) ? load_global_profile() : profile
-  
+function _resolve_subfield(def::FitIO.FieldDefinition, msg::FitIO.DataMessage; profile::FitProfile=PROFILE)
   !_isinprofile(def; profile=profile) && return nothing
   
-  field_profile = profile[:messages][def.global_mesg_num][:fields][def.field_id]
+  field_profile = profile.messages[def.global_mesg_num][:fields][def.field_id]
   sub_fields = field_profile[:sub_fields]
   
   isempty(sub_fields) && return nothing
@@ -369,12 +363,12 @@ Returns: A `Config` object containing the global profile for message decoding.
 
 FIXME: consider using FitProfile from the global `PROFILE` constant instead.
 """
-function load_global_profile(msgfile::AbstractString=PROFILE_PATH)::Config
-    return open(msgfile) do io
-        data = MsgPack.unpack(io)
-        Config(data)
-    end
-end
+# function load_global_profile(msgfile::AbstractString=PROFILE_PATH)::Config
+#     return open(msgfile) do io
+#         data = MsgPack.unpack(io)
+#         Config(data)
+#     end
+# end
 
 
 
@@ -384,62 +378,53 @@ end
   if a message or field can be decoded using the profile.
 
 """
-function _isinprofile(global_mesg_num::Unsigned; profile::Union{Nothing, Config}=nothing)::Bool
-  profile = isnothing(profile) ? load_global_profile() : profile
-  return haskey(profile[:messages], global_mesg_num)
-end
+_isinprofile(global_mesg_num::Unsigned; profile::FitProfile=PROFILE)::Bool = 
+  haskey(profile.messages, global_mesg_num)
 
-function _isinprofile(global_mesg_num::Unsigned, field_id::Unsigned; profile::Union{Nothing, Config}=nothing)::Bool
-  profile = isnothing(profile) ? load_global_profile() : profile
+function _isinprofile(global_mesg_num::Unsigned, field_id::Unsigned; profile::FitProfile=PROFILE)::Bool
   # message number must be in profile
   if _isinprofile(global_mesg_num; profile=profile) == false
     return false
   end
   # check if field_id is in the message's fields. Return (True or False)
-  return haskey(profile[:messages][global_mesg_num][:fields], field_id)
+  return haskey(profile.messages[global_mesg_num].fields, field_id)
 end
 
-
-function _isinprofile(msg::DataMessage; profile::Union{Nothing, Config}=nothing)::Bool
-  profile = isnothing(profile) ? load_global_profile() : profile
+function _isinprofile(msg::DataMessage; profile::FitProfile=PROFILE)::Bool
   _global_mesg_num = msg.definition.header.global_mesg_num
   return _isinprofile(_global_mesg_num; profile=profile)
 end
 
-function _isinprofile(field::FieldDefinition; profile::Union{Nothing, Config}=nothing)::Bool
-  profile = isnothing(profile) ? load_global_profile() : profile
+function _isinprofile(field::FieldDefinition; profile::FitProfile=PROFILE)::Bool
   _global_mesg_num = field.global_mesg_num
   _field_id = field.field_id
   return _isinprofile(_global_mesg_num, _field_id; profile=profile)
 end
 
 
-
-
-
 """
   Return true if the field definition is of numeric type. Checks the global profile
   to determine the base type of the field and whether it is numeric.
 """
-function _is_numeric_field(def::FitIO.FieldDefinition; profile::Union{Nothing, Config}=nothing)::Bool
-  profile = isnothing(profile) ? load_global_profile() : profile
+# function _is_numeric_field(def::FitIO.FieldDefinition; profile::Union{Nothing, Config}=nothing)::Bool
+#   profile = isnothing(profile) ? load_global_profile() : profile
 
-  # if the field is not defined in the profile, we cannot determine if it is numeric or not, so we return false
-  !_isinprofile(def; profile=profile) && return false
+#   # if the field is not defined in the profile, we cannot determine if it is numeric or not, so we return false
+#   !_isinprofile(def; profile=profile) && return false
 
-  _global_mesg_num = def.global_mesg_num
-  _field_id = def.field_id
+#   _global_mesg_num = def.global_mesg_num
+#   _field_id = def.field_id
 
-  # extract the field profile from the global profile
-  field_profile = profile[:messages][_global_mesg_num][:fields][_field_id]
-  _base_type = field_profile[:type] |> Symbol
+#   # extract the field profile from the global profile
+#   field_profile = profile[:messages][_global_mesg_num][:fields][_field_id]
+#   _base_type = field_profile[:type] |> Symbol
 
-  if haskey(FitIO.BASE_TYPE_NAME, _base_type) &&
-       FitIO.BASE_TYPE_NAME[_base_type].numeric
-      return true
-  end
-  return false
-end
+#   if haskey(FitIO.BASE_TYPE_NAME, _base_type) &&
+#        FitIO.BASE_TYPE_NAME[_base_type].numeric
+#       return true
+#   end
+#   return false
+# end
 
 
 """
