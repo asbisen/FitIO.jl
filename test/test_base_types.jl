@@ -2,7 +2,7 @@ using Test
 using FitIO: base_type, get_base_type_size, get_base_type_data_type, is_valid_base_type
 using FitIO: get_base_type_code, get_base_type_invalid_value, get_base_type_id
 
-@testset "Base Type" begin
+@testset "Base Type                      " begin
     # Test base type retrieval by id
     @test base_type(0x00).type_name == :enum
     @test base_type(0x01).type_name == :sint8
@@ -29,3 +29,4 @@ using FitIO: get_base_type_code, get_base_type_invalid_value, get_base_type_id
     @test is_valid_base_type(0x02)
     @test is_valid_base_type(:string)
 end
+

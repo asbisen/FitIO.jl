@@ -3,7 +3,7 @@ using FitIO
 
 include("test_utils.jl")
 
-@testset "FitHeader" begin
+@testset "FitHeader                      " begin
     # Test cases for CRC calculations
     fit_files = get_sdk_fit_files()
 

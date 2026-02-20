@@ -16,31 +16,21 @@ The library currently supports:
 
 - Access to a global `PROFILE::FitProfile` constant that describes all supported record structures, which can be used to interpret and transform `DataMessage` records
 
+## Example
 
-## Example 
-
-* reading raw messages without decoding
-
-```julia
-fit = FitFile("sample_fit_file.fit")
-messages = [m for m in fit]
-```
-
-* reading and decoding messages
+### Reading a FIT File
 
 ```julia
-julia> decoded_data = decode_fit_file("Activity.fit")
-julia> records = FitDecoder.get_records(decoded_data, "record")
-julia> records[10]
-record (9/9 valid fields) @ 2021-07-20T21:11:29
-  1118.0 Any["m"] [✓]
-  9.0 m [✓]
-  1.0 Any["m/s"] [✓]
-  965 semicircles [✓]
-  9 rpm [✓]
-  0 semicircles [✓]
-  150 watts [✓]
-  995749889 s [✓]
-  195 bpm [✓]
-```
+using FitIO
+using DataFrames
 
+# Load a FIT file
+fitfile = FitFile("path/to/file.fit")
+decoded_messages = DecodedFitFile(fitfile)
+
+# show types of decoded messages
+keys(decoded_messages)
+
+# read specific message types to a DataFrame
+df = decoded_messages["record"] |> to_dataframe
+```
