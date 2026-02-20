@@ -24,13 +24,10 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - "1.11"
-          # - "1.6"
-          # - "pre"
+          - "1.12"
         os:
           - ubuntu-latest
         arch:
-          # - aarch64
           - x64
     steps:
       - uses: actions/checkout@v4
