@@ -120,7 +120,7 @@ Iterate over the field definitions in the message and decode each field
     - promote numeric values to a higher precision type (e.g., Int or Float64) to ensure sufficient precision
 """ 
 function decode(cfg::DecoderConfig, msg::FitIO.DataMessage; profile=nothing)
-  profile = isnothing(profile) ? FitDecoder.load_global_profile() : profile
+  profile = isnothing(profile) ? load_global_profile() : profile
   _global_mesg_num = msg.definition.header.global_mesg_num
 
   # if message is defined in global profile use the name from the profile,
@@ -185,7 +185,7 @@ function decode(cfg::DecoderConfig, msg::FitIO.DataMessage; profile=nothing)
       # convert to datetime if the field is of type "date_time" in the profile
       # and change the unit to "" to reflect the conversion to datetime
       if field_profile[:type] == "date_time"
-        _decoded_value = FitDecoder.convert_garmin_datetime(_decoded_value)
+        _decoded_value = convert_garmin_datetime(_decoded_value)
         _field_unit = ""
       end
     end
@@ -243,7 +243,7 @@ _replace_invalid(val::Vector, invalid_val) = [_replace_invalid(v, invalid_val) f
   returns the raw value unchanged.
 """
 function _decode_enum(msg::FitIO.DataMessage, def::FitIO.FieldDefinition, raw_val; profile=nothing)
-  profile = isnothing(profile) ? FitDecoder.load_global_profile() : profile
+  profile = isnothing(profile) ? load_global_profile() : profile
   _field_in_profile = _isinprofile(def; profile=profile)
   _global_mesg_num = msg.definition.header.global_mesg_num
 
@@ -282,7 +282,7 @@ end
   - Scale factor is 1
 """
 function _apply_scale_offset(msg::FitIO.DataMessage, def::FitIO.FieldDefinition, val; profile=nothing)
-  profile = isnothing(profile) ? FitDecoder.load_global_profile() : profile
+  profile = isnothing(profile) ? load_global_profile() : profile
   _field_in_profile = _isinprofile(def; profile=profile)
   _global_mesg_num = msg.definition.header.global_mesg_num
 
@@ -332,7 +332,7 @@ _is_numeric_value(::Any) = false
   configuration if mapping conditions match, otherwise returns nothing.
 """
 function _resolve_subfield(def::FitIO.FieldDefinition, msg::FitIO.DataMessage; profile=nothing)
-  profile = isnothing(profile) ? FitDecoder.load_global_profile() : profile
+  profile = isnothing(profile) ? load_global_profile() : profile
   
   !_isinprofile(def; profile=profile) && return nothing
   
@@ -516,12 +516,12 @@ end
 
 """
 function _isinprofile(global_mesg_num::Unsigned; profile::Union{Nothing, Config}=nothing)::Bool
-  profile = isnothing(profile) ? FitDecoder.load_global_profile() : profile
+  profile = isnothing(profile) ? load_global_profile() : profile
   return haskey(profile[:messages], global_mesg_num) ? true : false
 end
 
 function _isinprofile(global_mesg_num::Unsigned, field_id::Unsigned; profile::Union{Nothing, Config}=nothing)::Bool
-  profile = isnothing(profile) ? FitDecoder.load_global_profile() : profile
+  profile = isnothing(profile) ? load_global_profile() : profile
   # message number must be in profile
   if _isinprofile(global_mesg_num; profile=profile) == false
     return false
@@ -536,13 +536,13 @@ end
 
 
 function _isinprofile(msg::DataMessage; profile::Union{Nothing, Config}=nothing)::Bool
-  profile = isnothing(profile) ? FitDecoder.load_global_profile() : profile
+  profile = isnothing(profile) ? load_global_profile() : profile
   _global_mesg_num = msg.definition.header.global_mesg_num
   return _isinprofile(_global_mesg_num; profile=profile)
 end
 
 function _isinprofile(field::FieldDefinition; profile::Union{Nothing, Config}=nothing)::Bool
-  profile = isnothing(profile) ? FitDecoder.load_global_profile() : profile
+  profile = isnothing(profile) ? load_global_profile() : profile
   _global_mesg_num = field.global_mesg_num
   _field_id = field.field_id
   return _isinprofile(_global_mesg_num, _field_id; profile=profile)
@@ -557,7 +557,7 @@ end
   to determine the base type of the field and whether it is numeric.
 """
 function _is_numeric_field(def::FitIO.FieldDefinition; profile::Union{Nothing, Config}=nothing)::Bool
-  profile = isnothing(profile) ? FitDecoder.load_global_profile() : profile
+  profile = isnothing(profile) ? load_global_profile() : profile
 
   # if the field is not defined in the profile, we cannot determine if it is numeric or not, so we return false
   !_isinprofile(def; profile=profile) && return false
@@ -577,4 +577,36 @@ function _is_numeric_field(def::FitIO.FieldDefinition; profile::Union{Nothing, C
 end
 
 
+"""
+  Promote values to higher-precision types for numeric values, pass through others.
+  This is used to ensure that numeric values are decoded with sufficient precision, especially
+  when the raw value is stored in a smaller type (e.g., UInt16) but the decoded value is expected
+  to be a larger type (e.g., Int or Float64).
+"""
 
+# Default: return as-is for non-promotable types
+_promote(val) = val
+
+# Override: promote numeric types
+_promote(val::Integer) = Int(val)
+_promote(val::AbstractFloat) = Float64(val)
+
+# Override: handle vectors recursively
+_promote(val::Vector) = map(_promote, val)
+
+
+
+"""
+    convert_garmin_datetime(raw_value::Union{Number, Nothing}) -> Union{DateTime, Nothing}
+
+Convert Garmin FIT timestamp (seconds since FIT epoch) to Julia DateTime.
+"""
+function convert_garmin_datetime(raw_value::Union{Number, Nothing})
+    # Handle nothing/invalid values
+    if raw_value === nothing
+        return nothing
+    end
+
+    fit_epoch = Dates.unix2datetime(FitIO.FIT_EPOCH_OFFSET)
+    return fit_epoch + Second(raw_value)
+end

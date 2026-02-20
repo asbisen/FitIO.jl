@@ -35,7 +35,8 @@ export FitFile
 include("api/decoder.jl")
 export load_global_profile,
        DecodedFitFile,
-       DecoderConfig
+       DecoderConfig,
+       FieldData
 
 
 end # module FitIO

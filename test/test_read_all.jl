@@ -41,7 +41,7 @@ function read_all_messages(f::AbstractString; verbose::Bool=false)
 end
 
 
-@testset "Read Files" begin
+@testset "Read Files                     " begin
     fit_files = get_sdk_fit_files()
 
     for f in fit_files

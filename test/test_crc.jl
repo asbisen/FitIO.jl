@@ -4,7 +4,7 @@ using FitIO: _extract_file_crc, _calculate_crc
 include("test_utils.jl")
 
 
-@testset "CRC Tests" begin
+@testset "CRC Tests                      " begin
     # Test cases for CRC calculations
     fit_files = get_sdk_fit_files()
     
