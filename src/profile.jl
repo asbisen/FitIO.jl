@@ -9,7 +9,7 @@ end
 
 # Load profile data (lazy loading to avoid memory issues)
 const PROFILE = let
-    profile_path = joinpath(@__DIR__, "msgpack", "profile.msg")
+    profile_path = PROFILE_PATH
     if isfile(profile_path)
         msg_data = MsgPack.unpack(open(profile_path))
         msg = Config(msg_data)
@@ -23,6 +23,6 @@ const PROFILE = let
         )
     else
         # Error out if the file profile.msg does not exists
-        @error "Unable to load profile.msg."
+        throw(error("Unable to load profile.msg at $profile_path"))
     end
 end

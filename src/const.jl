@@ -28,3 +28,5 @@ const DEV_DATA_MASK = 0x20
 
 const FIT_EPOCH_OFFSET = 631065600  # seconds from Unix epoch to Dec 31, 1989 UTC
 const FIT_GPS_FACTOR = 11930465 # GPS time factor for converting FIT time to seconds
+
+const PROFILE_PATH = joinpath(@__DIR__, "msgpack", "profile.msg")

@@ -2,6 +2,7 @@ module FitIO
 
 using Printf
 using Dates
+using DataFrames
 
 import EasyConfig: Config
 using MsgPack
@@ -32,11 +33,14 @@ export decode_data_message!, DataMessage
 include("iterator.jl")
 export FitFile
 
+include("api/types.jl")
 include("api/decoder.jl")
 export load_global_profile,
        DecodedFitFile,
+       DecodedMessage,
        DecoderConfig,
-       FieldData
+       FieldData,
+       to_dataframe
 
 
 end # module FitIO
