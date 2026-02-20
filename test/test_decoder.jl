@@ -25,7 +25,7 @@ end
 function decode_messages(f::AbstractString; verbose::Bool=false)
     fitfile = FitIO.FitFile(f)
     records = [m for m in fitfile if isa(m, FitIO.DataMessage)]
-    profile = load_global_profile()
+    profile = PROFILE
     decoded_messages = decode.(Ref(DecoderConfig()), records; profile=profile)
     decoded_messages
 end
@@ -43,7 +43,7 @@ end
 end
 
 @testset "Validate Edge1050 FitFile      " begin
-    profile = load_global_profile()
+    profile = PROFILE
     fitdata = DecodedFitFile("$(@__DIR__)/../data/custom/activity_edge_rally_hrm.fit")
     @test haskey(fitdata, "device_info")
     @test length(fitdata["device_info"]) == 20

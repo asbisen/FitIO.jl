@@ -113,7 +113,7 @@ end
 
 function DecodedFitFile(fitfile::FitFile)
   records = [m for m in fitfile if isa(m, DataMessage)]
-  profile = load_global_profile()
+  profile = PROFILE
   cfg = DecoderConfig()
   decoded_messages = decode.(Ref(cfg), records; profile=profile)
   return DecodedFitFile(decoded_messages)
