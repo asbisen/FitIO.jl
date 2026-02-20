@@ -19,18 +19,23 @@ export FitDecoderError, FitStreamError
 include("stream.jl")
 export FitStream
 
-include("decoder/utils.jl")
-include("decoder/header.jl")
+include("parser/utils.jl")
+include("parser/header.jl")
 export FitHeader
 
-include("decoder/definition_message.jl")
+include("parser/definition_message.jl")
 export decode_definition_message!, DefinitionMessage
 
-include("decoder/data_message.jl")
+include("parser/data_message.jl")
 export decode_data_message!, DataMessage
 
 include("iterator.jl")
 export FitFile
+
+include("api/decoder.jl")
+export load_global_profile,
+       DecodedFitFile,
+       DecoderConfig
 
 
 end # module FitIO
