@@ -44,7 +44,7 @@ end
 
 @testset "Validate Edge1050 FitFile      " begin
     profile = load_global_profile()
-    fitdata = DecodedFitFile("data/custom/activity_edge_rally_hrm.fit")
+    fitdata = DecodedFitFile("$(@__DIR__)/../data/custom/activity_edge_rally_hrm.fit")
     @test haskey(fitdata, "device_info")
     @test length(fitdata["device_info"]) == 20
     @test fitdata["device_info"][1]["manufacturer"]   == FieldData("garmin","")
