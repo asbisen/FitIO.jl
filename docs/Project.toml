@@ -1,0 +1,3 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+FitIO = "3ead0a55-6966-403a-a7e1-c8c6f23f159c"

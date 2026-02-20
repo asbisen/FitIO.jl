@@ -189,7 +189,22 @@ end
 
 
 
+"""
+    DefinitionMessage
 
+A struct representing a FIT definition message, which includes the message header, field definitions, 
+developer field definitions, and a struct format string for parsing the associated data message.
+
+Fields:
+- `header::DefinitionHeader`: The header information for the definition message, including metadata about the
+  message type, endianness, and number of fields.
+- `field_definitions::Vector{FieldDefinition}`: A vector containing the definitions of each field in the message,
+  including field ID, size, base type, and number of elements.
+- `developer_field_defs::Vector{DeveloperFieldDefinition}`: A vector containing definitions for any
+  developer fields present in the message, including field definition number, size, data index, and endianness.
+- `struct_format_string::String`: A format string constructed based on the field definitions, used
+  for parsing the binary data of the associated data message according to the FIT file format specification.
+"""
 struct DefinitionMessage
     header::DefinitionHeader
     field_definitions::Vector{FieldDefinition}
