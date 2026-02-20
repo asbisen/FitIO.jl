@@ -1,3 +1,18 @@
+"""
+    DataMessage
+
+A `DataMessage` represents a decoded data message from a FIT file. It contains the associated 
+`DefinitionMessage` that describes the structure of the data and a vector of raw values read 
+from the stream based on that definition. The raw values are stored as `Any` since their types 
+can vary widely depending on the field definitions, including numbers, strings, or byte arrays 
+for developer fields.
+
+# Fields
+- `definition::DefinitionMessage`: The definition message that describes the structure of this data message.
+- `raw_values::Vector{Any}`: A vector containing the raw values read from the stream according to the 
+  definition. The types of the values depend on the field definitions and may include numbers, strings, or 
+  byte arrays for developer fields.
+"""
 struct DataMessage 
     definition::DefinitionMessage
     raw_values::Vector{Any}

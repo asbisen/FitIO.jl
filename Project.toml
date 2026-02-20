@@ -16,3 +16,6 @@ EasyConfig = "0.1.16"
 MsgPack = "1.2.1"
 Printf = "1.11.0"
 Test = "1.11.0"
+
+[workspace]
+projects = ["docs"]

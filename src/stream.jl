@@ -8,7 +8,8 @@ for parsing FIT files regardless of whether the data comes from a file, byte arr
 
 The FitStream handles tracking the current position during parsing and provides methods for navigating
 through the binary data. It's a core component that other parts of the library use to sequentially read
-structured data according to the FIT file format specification.
+structured data according to the FIT file format specification and is not intended for direct use by end-users. 
+The [FitFile](@ref) struct is the main entry point for users, which internally uses FitStream to manage the raw data.
 
 # Fields
 - `data::Vector{UInt8}`: The raw byte data of the FIT file
@@ -34,7 +35,11 @@ mutable struct FitStream
 end
 
 
-"""Create a FitStream from a file."""
+"""
+  FitStream(filename::String)
+
+Create a FitStream from a file.
+"""
 function FitStream(filename::String)
     if !isfile(filename)
         throw(FitStreamError("File not found: $filename"))

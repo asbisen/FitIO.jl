@@ -1,3 +1,39 @@
+"""
+    FitFile
+
+This struct represents a FIT file and provides and iterator interface for
+sequentially reading messages from the file. It is supposed to be called
+using the `FitFile(filename::String)` constructor, which initializes the 
+underlying `FitStream` and reads the file header. The iterator interface 
+allows users to loop through the messages in the FIT file without needing 
+to manage the stream position manually.
+
+FIT file consists of two types of messages:
+1. **[Definition Messages](@ref DefinitionMessage)**: These messages define the 
+   structure of subsequent data messages. They specify the fields, their types, 
+   and sizes for a particular local message number.
+2. **[Data Messages](@ref DataMessage)**: These messages contain the actual 
+   data values and are structured according to the most recent definition message 
+   for their local message number.
+
+Data messages are mostly meaningful for users, while definition messages are 
+more relevant for internal parsing logic. In the example usage, we filter 
+the messages to only include data messages for user consumption.
+
+# Fields
+- `path::AbstractString`: The file path of the FIT file
+- `stream::FitStream`: The underlying stream for reading the FIT file data
+- `header::FitHeader`: The parsed file header containing metadata about the FIT file
+- `definition_messages::Dict{UInt8, DefinitionMessage}`: A dictionary to store 
+  definition messages indexed by their local message number
+
+# Example Usage
+```julia
+fit_file = FitFile("path/to/fitfile.fit")
+messages = filter(m -> isa(m, DataMessage), fit_file) # filter data messages
+```
+
+"""
 struct FitFile
     path::AbstractString
     stream::FitStream
@@ -63,7 +99,7 @@ function Base.eltype(::Type{FitFile})
     return Union{DefinitionMessage, DataMessage}
 end
 
-# Additional helper function to reset the iterator
+# reset the iterator
 function reset!(fit::FitFile)
     # Reset the stream position to the start of the data section
     seek!(fit.stream, Int(fit.header.header_size) + 1)
